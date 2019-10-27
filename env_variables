@@ -32,3 +32,9 @@ token_file: join_token
 
 control_plane_endpoint: "master1:6443"
 cluster_name: preprod
+
+# GlusterFS configuration
+storage_device_name: "/dev/sdb"
+user_key: FNvibN5WoiIFJ15EnTI9OdACHwv87P
+admin_key: nofApFRBh4bpbTEvTqyIJXKpPLk8Pi
+gluster_fs_namespace: gluster-fs

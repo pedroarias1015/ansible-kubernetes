@@ -1,7 +1,7 @@
 ---
 - hosts: kubernetes-master-nodes
   vars_files:
-  - env_variables
+  - ../../env_variables
   tasks:
   tasks:
   - name: Copying token to worker nodes

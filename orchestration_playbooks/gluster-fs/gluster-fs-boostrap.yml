@@ -1,0 +1,3 @@
+---
+- import_playbook: ../../playbooks/gluster-fs/gluster-pre-flight.yml
+- import_playbook: ../../playbooks/gluster-fs/gluster-start-up.yml

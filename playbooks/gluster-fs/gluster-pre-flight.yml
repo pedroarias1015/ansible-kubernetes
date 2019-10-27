@@ -1,0 +1,105 @@
+---
+- hosts: all
+  vars_files:
+  - ../../env_variables
+  tasks:
+  - name: Installing glusterfs-client
+    shell: apt-get -y install glusterfs-client
+    become: yes
+    become_user: root
+
+- hosts: glusterfs-nodes
+  vars_files:
+  - ../../env_variables
+  tasks:
+  - name: Load required kernel modules
+    shell: for i in dm_snapshot dm_mirror dm_thin_pool; do sudo modprobe $i; done
+    become: yes
+    become_user: root
+
+- hosts: 127.0.0.1
+  connection: local
+  tasks:
+  - name: Download kubernetes glusterFS repo locally
+    shell: |
+        rm -rf /home/ubuntu/gluster-kubernetes
+        mkdir /home/ubuntu/gluster-kubernetes
+        git clone https://github.com/gluster/gluster-kubernetes.git /home/ubuntu/gluster-kubernetes
+        
+
+  - name: Install yaml2json locally
+    shell: |
+        apt install -y python-pip
+        pip install yml2json
+    become: yes
+    become_user: root
+
+
+
+- hosts: glusterfs-nodes
+  vars_files:
+  - ../../env_variables
+  tasks:
+
+  - name: Create base topology file
+    file:
+      path: /home/ubuntu/topology.yml
+      state: touch
+    delegate_to: localhost
+
+  - name: Create each node topology file
+    file:
+      path: /home/ubuntu/topology-{{ inventory_hostname }}.yml
+      state: touch
+    delegate_to: localhost
+
+  - name: Add clusters to first line of topology file
+    blockinfile:
+      path: /home/ubuntu/topology.yml
+      block: |
+        clusters:
+        - nodes:
+    delegate_to: localhost
+
+  - name: Fill topology file for each node
+    blockinfile:
+      path: /home/ubuntu/topology-{{ inventory_hostname }}.yml
+      block: |
+        #beggining
+            - node:
+                hostnames:
+                    manage:
+                    - {{ inventory_hostname }}
+                    storage:
+                    - {{ ansible_host }}
+                zone: 1
+                devices:
+                - {{ storage_device_name }}
+    delegate_to: localhost
+
+  - name: Remove old inventory if exists
+    shell: if [ -f /home/ubuntu/inventory ]; then rm -rf /home/ubuntu/inventory;fi
+    delegate_to: localhost
+
+  - name: Register inventory to ulterior merge
+    shell: echo topology-{{ inventory_hostname }}.yml >> /home/ubuntu/inventory
+    delegate_to: localhost
+
+- hosts: 127.0.0.1
+  connection: local
+  tasks:
+  - name: Merge topology files
+    shell: |
+        for file in $(cat /home/ubuntu/inventory);do cat /home/ubuntu/$file >> /home/ubuntu/topology.yml;rm  /home/ubuntu/$file;done
+        rm /home/ubuntu/inventory
+  
+  - name: Convert to json
+    shell: |
+        yml2json /home/ubuntu/topology.yml > /home/ubuntu/topology.json
+        rm /home/ubuntu/topology.yml
+
+
+    
+
+    
+
