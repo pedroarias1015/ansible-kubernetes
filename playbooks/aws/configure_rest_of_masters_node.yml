@@ -1,19 +1,16 @@
 ---
-- hosts: kubernetes-worker-nodes
+- hosts: kubernetes-master-nodes
   vars_files:
-  - ../env_variables
+  - env_variables
+  tasks:
   tasks:
   - name: Copying token to worker nodes
     copy: src=/home/ubuntu/{{ token_file }} dest=/home/ubuntu/join_token
-
-  - name: Reseting kubeadm
-    shell: kubeadm reset -f
-    become: yes
-    become_user: root
   
   - name: Getting joining token
     shell: |
-      cat /home/ubuntu/join_token | tail -2 |  awk {'print $5'} | head -1
+      kubeadm reset -f
+      cat /home/ubuntu/join_token | tail -2 |  awk {'print $5'}
     register: token
     become: yes
     become_user: root
@@ -34,16 +31,23 @@
     blockinfile:
       path: /etc/kubernetes/aws.yml
       block: |
-        apiVersion: kubeadm.k8s.io/v1beta1
+        ---
+        apiVersion: kubeadm.k8s.io/v1beta2
         kind: JoinConfiguration
         discovery:
           bootstrapToken:
             token: {{ token.stdout }}
             apiServerEndpoint: {{ control_plane_endpoint }}
-            caCertHashes:
+            caCertHashes: 
               - {{ discovery_token.stdout }}
         nodeRegistration:
           name: {{ inventory_hostname }}
+          kubeletExtraArgs:
+            cloud-provider: aws
+        controlPlane:
+          localAPIEndpoint:
+            advertiseAddress: {{ ansible_host }}
+          certificateKey: {{ certificate.stdout }} #To fix when AWS is available
     become: yes
     become_user: root
 
@@ -51,8 +55,3 @@
     shell: kubeadm join --config=/etc/kubernetes/aws.yml
     become: yes
     become_user: root
-
-
-  
-
-  

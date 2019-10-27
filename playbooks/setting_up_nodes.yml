@@ -46,7 +46,7 @@
     become_user: root
       
   - name: Set hostname in each machine
-    shell: hostnamectl set-hostname {{ ansible_host }}
+    shell: hostnamectl set-hostname {{ inventory_hostname }}
     become: yes
     become_user: root
      
