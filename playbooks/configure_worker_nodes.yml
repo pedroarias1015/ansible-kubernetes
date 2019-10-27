@@ -1,0 +1,30 @@
+---
+- hosts: kubernetes-worker-nodes
+  vars_files:
+  - ../env_variables
+  tasks:
+  - name: Copying token to worker nodes
+    copy: src=/home/ubuntu/{{ token_file }} dest=/home/ubuntu/join_token
+  
+  - name: Setting up join file
+    blockinfile:
+      path: /etc/kubernetes/aws.yml
+      block: |
+        ---
+        apiVersion: kubeadm.k8s.io/v1beta1
+        kind: JoinConfiguration
+        discovery:
+          bootstrapToken:
+            token: ml32dg.ko3wqhjxo2zw2na4
+            apiServerEndpoint: "elb.appsec-khazad-dum.com:6443"
+            caCertHashes:
+              - "sha256:b02d2506becec0e75ad42f276b1053d36996870513db2264552fbae9d57a95d0"
+        nodeRegistration:
+          name: ip-172-31-1-59.eu-west-1.compute.internal
+
+
+  - name: Joining worker nodes with kubernetes master
+    shell: |
+     kubeadm reset -f
+     cat /home/centos/join_token | tail -2 > out.sh
+     sh out.sh

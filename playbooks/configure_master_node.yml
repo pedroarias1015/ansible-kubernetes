@@ -1,0 +1,59 @@
+---
+- hosts: kubernetes-master-node
+  vars_files:
+  - ../env_variables
+  tasks:
+  - name: Pulling images required for setting up a Kubernetes cluster
+    shell: kubeadm config images pull
+    become: yes
+    become_user: root
+
+  - name: Resetting kubeadm
+    shell: |
+      kubeadm reset -f
+      rm -rf /etc/kubernetes/aws.yml
+    register: output
+    become: yes
+    become_user: root
+  
+  - name: Creating a repository file for Kubernetes
+    file:
+      path: /etc/kubernetes/aws.yml
+      state: touch
+    become: yes
+    become_user: root
+    
+  - name: Generating kubeadm init aws.yml file
+    blockinfile:
+      path: /etc/kubernetes/aws.yml
+      block: |
+        apiVersion: kubeadm.k8s.io/v1beta2
+        kind: ClusterConfiguration
+        clusterName: {{ cluster_name }}
+        controlPlaneEndpoint: {{ control_plane_endpoint }}
+        networking:
+          dnsDomain: {{ dnsDomain }}
+          podSubnet: {{ cidr_v }}
+          serviceSubnet: {{ serviceSubnet }}
+    become: yes
+    become_user: root
+
+  - name: Initializing Kubernetes cluster
+    shell: kubeadm init --config=/etc/kubernetes/aws.yml
+    register: output
+    become: yes
+    become_user: root
+
+  - name: Storing Logs and Generated token for future purpose.
+    local_action: copy content={{ output.stdout }} dest=/home/ubuntu/{{ token_file }}
+
+  - name: Copying kubeconfig
+    shell: |
+      mkdir -p /home/ubuntu/.kube
+      cp -f /etc/kubernetes/admin.conf /home/ubuntu//.kube/config
+      chown 1000:1000 /home/ubuntu/.kube/config
+    become: yes
+    become_user: root
+
+  - name: Install Network Add-on
+    command: kubectl apply -f https://docs.projectcalico.org/v3.8/manifests/calico.yaml
