@@ -1,19 +1,19 @@
 #General Kubernetes Cluster configuration
 
 [kubernetes-master-node]
-master1 ansible_host=192.168.255.147 ansible_ssh_private_key_file=private_keys/id_rsa.pem
+master1 ansible_host=192.168.1.48 ansible_ssh_private_key_file=private_keys/id_rsa.pem
 
 [kubernetes-master-nodes]
 #master2 ansible_host=
 
 [kubernetes-worker-nodes]
-worker1 ansible_host=192.168.255.146 ansible_ssh_private_key_file=private_keys/id_rsa.pem
-worker2 ansible_host=192.168.255.144 ansible_ssh_private_key_file=private_keys/id_rsa.pem
+worker1 ansible_host=192.168.1.49 ansible_ssh_private_key_file=private_keys/id_rsa.pem
+worker2 ansible_host=192.168.1.50 ansible_ssh_private_key_file=private_keys/id_rsa.pem
 
 
 
 #GlusterFS configuration
 [glusterfs-nodes]
-worker1 ansible_host=192.168.255.146 ansible_ssh_private_key_file=private_keys/id_rsa.pem
-worker2 ansible_host=192.168.255.144 ansible_ssh_private_key_file=private_keys/id_rsa.pem
+worker1 ansible_host=192.168.1.49 ansible_ssh_private_key_file=private_keys/id_rsa.pem
+worker2 ansible_host=192.168.1.50 ansible_ssh_private_key_file=private_keys/id_rsa.pem
 

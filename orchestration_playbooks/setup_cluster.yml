@@ -1,5 +1,5 @@
 ---
-- import_playbook: ../playbooks/prerequisites.yml
-- import_playbook: ../playbooks/setting_up_nodes.yml
-- import_playbook: ../playbooks/configure_master_node.yml
-- import_playbook: ../playbooks/configure_worker_nodes.yml
+- import_playbook: ../playbooks/cluster-boostrap/prerequisites.yml
+- import_playbook: ../playbooks/cluster-boostrap/setting_up_nodes.yml
+- import_playbook: ../playbooks/cluster-boostrap/configure_master_node.yml
+- import_playbook: ../playbooks/cluster-boostrap/configure_worker_nodes.yml

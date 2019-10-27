@@ -28,6 +28,7 @@
       systemctl daemon-reload
       systemctl restart docker
       usermod -aG docker ubuntu
+      sysctl net.bridge.bridge-nf-call-iptables=1
     become: yes
     become_user: root
     
@@ -60,4 +61,40 @@
     with_items: "{{ groups.all }}"
     become: yes
     become_user: root
+
+- hosts: 127.0.0.1
+  connection: local
+  vars_files:
+  - ../../env_variables
+  tasks:
+  - name: Install kubectl if not exists
+    shell: |
+      curl -s https://packages.cloud.google.com/apt/doc/apt-key.gpg | apt-key add -
+      cat <<EOF >/etc/apt/sources.list.d/kubernetes.list
+      deb https://apt.kubernetes.io/ kubernetes-xenial main
+      EOF
+      apt-get update
+      apt-get install -y kubectl={{kubernetes_version}}
+    become: yes
+    become_user: root
+
+  - name: create .kube forlder
+    shell: if [ ! -d  /home/ubuntu/.kube ]; then mkdir /home/ubuntu/.kube;fi
+
+
+- hosts: all
+  vars_files:
+  - ../../env_variables
+  tasks:
+  - name: Add IP address of all hosts to all hosts to bastion
+    lineinfile:
+      dest: /etc/hosts
+      regexp: '.*{{ item }}$'
+      line: "{{ hostvars[item].ansible_host }} {{item}}"
+      state: present
+    when: hostvars[item].ansible_host is defined
+    with_items: "{{ groups.all }}"
+    become: yes
+    become_user: root
+    delegate_to: localhost
    
